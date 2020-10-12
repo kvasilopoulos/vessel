@@ -12,4 +12,4 @@ ships <- readr::read_csv(unz("data-raw/ships_data.zip", "ships.csv")) %>%
   mutate(distance = distHaversine(cbind(lon, lat), cbind(lon1, lat1))) %>% 
   ungroup()
 
-usethis::use_data(ships, overwrite = TRUE)
+use_data(ships)
