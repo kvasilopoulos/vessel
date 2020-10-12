@@ -1,49 +1,128 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
+# TODO do as modules
+# TODO add some testthat tests to ensure best practicess
 
 library(shiny)
+# library(shiny.semantic)
+library(leaflet)
+library(leaflet.extras)
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+ui <- navbarPage(
+    tabPanel(
+        "Interactive map",
+        
+        div(class = "row",
+            h1("Vessel Maximum Distance Calculator"),
+            style = "text-align:center;"
         ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
+        
+        div(class = "outer",
+            tags$head(
+                includeCSS("styles.css")
+            ),
+            
+            leaflet::leafletOutput("map", width="100%", height="100%"),
+            
+            absolutePanel(
+                id = "controls", class = "panel panel-default", fixed = TRUE,
+                draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                width = 250, height = "auto",
+                
+                semanticPage(
+                    
+                    dropdown_select("dropdown_type",  unique(ships$ship_type)),
+                    dropdown_select("dropdown_name",  unique(ships$ship_name)),
+                    
+                    # h4("Select Vessel Type:"),
+                    # dropdown_input("dropdown_type", unique(ships$ship_type)),
+                    
+                    # h4("Select Vessel Name:"),
+                    # dropdown_input("dropdown_name",  unique(ships$ship_name)),
+                    
+                    h4("Set View:"),
+                    toggle("tog", "Dark", FALSE)
+                )
+            )
         )
     )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-    })
+server <- function(input, output, session) {
+    dropdown_srv("dropdown_type")
+    # observeEvent(input$dropdown_type, {
+    #     new_shipnames <- dplyr::filter(ships, ship_type == input$dropdown_type) %>%
+    #         pull(ship_name) %>%
+    #         unique()
+    #     update_dropdown_input(session, "dropdown_name", choices = new_shipnames, value = "")
+    # })
+    
+    # observeEvent(input$dropdown_name, {
+    #     
+    #     max_distance <- filter(ships, ship_type == input$dropdown_type, ship_name == input$dropdown_name) %>% 
+    #         filter(distance == max(distance, na.rm = TRUE))
+    #     
+    #     content <- paste(
+    #         sep = "<br/>",
+    #         paste("<b>Distance:</b>", prettyNum(max_distance$distance, big.mark=","), "(meters)"),
+    #         paste("<b>Date:</b>", as.Date(max_distance$date)),
+    #         paste("<b>Destination:</b>", max_distance$destination)
+    #     )
+    #     
+    #     output$map <- renderLeaflet({
+    #         map <- leaflet(data = ships) %>%
+    #             addTiles() %>% 
+    #             addCircleMarkers(
+    #                 lng = max_distance$lon,
+    #                 lat = max_distance$lat,
+    #                 weight = 4,
+    #                 fill = TRUE,
+    #                 radius = 5,
+    #                 label = "Start",
+    #                 labelOptions = labelOptions(
+    #                     noHide = TRUE, 
+    #                     direction = "top",  
+    #                     textsize = "12px", 
+    #                     offset=c(0,-15)
+    #                 )
+    #             ) %>%
+    #             addCircleMarkers(
+    #                 lng = max_distance$lon1,
+    #                 lat = max_distance$lat1,
+    #                 weight = 4,
+    #                 fill = TRUE,
+    #                 radius = 5,
+    #                 label = "Finish",
+    #                 labelOptions = labelOptions(
+    #                     noHide = TRUE, 
+    #                     direction = "top",  
+    #                     textsize = "12px", 
+    #                     offset=c(0,-15)
+    #                 )
+    #             ) %>% 
+    #             addPolylines(
+    #                 lng = c(max_distance$lon, max_distance$lon1),
+    #                 lat = c(max_distance$lat, max_distance$lat1),
+    #                 weight = 3, 
+    #                 fillOpacity = 0.5, 
+    #                 color = "red") %>% 
+    #             addPopups(
+    #                 lng = (max_distance$lon+max_distance$lon1)/2,
+    #                 lat = (max_distance$lat+max_distance$lat1)/2,
+    #                 popup = content,
+    #                 popupOptions(textsize = "14px")
+    #             ) 
+    #     })
+    # })
+    # 
+    # observe({
+    #     if(input$tog) {
+    #         leafletProxy("map", data = ships) %>% 
+    #             addProviderTiles(providers$CartoDB.DarkMatter)
+    #     }else {
+    #         leafletProxy("map", data = ships) %>% 
+    #             addProviderTiles(providers$OpenStreetMap.Mapnik)
+    #     }
+    # })
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
