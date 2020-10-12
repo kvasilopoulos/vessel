@@ -27,7 +27,7 @@ ui <- navbarPage(
             
             absolutePanel(
                 id = "controls", class = "panel panel-default", fixed = TRUE,
-                draggable = TRUE, top = 100, left = "auto", right = 20, bottom = "auto",
+                draggable = TRUE, top = 300, left = "auto", right = 20, bottom = "auto",
                 width = 200, height = "auto",
                 
                 semanticPage(
