@@ -1,16 +1,17 @@
 
 library(shiny)
-library(shiny.semantic)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
-
+library(shiny.semantic)
 
 ships <- readRDS("data/ship.rds")
-    
+
 ui <- navbarPage(
+    
+    
     tabPanel(
-        "Interactive map",
+        "placeholder",
         
         div(class = "row",
             h1("Vessel Maximum Distance Calculator"),
@@ -27,16 +28,17 @@ ui <- navbarPage(
             absolutePanel(
                 id = "controls", class = "panel panel-default", fixed = TRUE,
                 draggable = TRUE, top = 100, left = "auto", right = 20, bottom = "auto",
-                width = 250, height = "auto",
+                width = 200, height = "auto",
                 
                 semanticPage(
+                    title = "",
                     
                     h4("Select Vessel Type:", style = "margin-top:1rem;"),
                     dropdown_input("dropdown_type", choices = unique(ships$ship_type)),
                     
                     h4("Select Vessel Name:"),
                     dropdown_input("dropdown_name", choices = unique(ships$ship_name)),
-                
+                    
                     
                     h4("Set View:"),
                     toggle("tog", "Dark", FALSE)
@@ -47,6 +49,12 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
+    
+    observe({
+        showNotification(
+            "Please select vessel type and name to <br/> find the maximum distance of the trip.",
+            duration = 20, type = "message")
+    }) 
     
     observeEvent(input$dropdown_type, {
         new_shipnames <- filter(ships, ship_type == input$dropdown_type) %>%
@@ -60,12 +68,14 @@ server <- function(input, output, session) {
         max_distance <- filter(ships, ship_type == input$dropdown_type, ship_name == input$dropdown_name) %>%
             filter(distance == max(distance, na.rm = TRUE))
         
-        content <- paste(
-            sep = "<br/>",
-            paste("<b>Distance:</b>", prettyNum(max_distance$distance, big.mark=","), "(meters)"),
-            paste("<b>Date:</b>", as.Date(max_distance$date)),
-            paste("<b>Destination:</b>", max_distance$destination)
-        )
+        content <- 
+            paste(
+                sep = "<br/>",
+                span("Maximum Distance", style="font-size:14px;font-weight:600;"),
+                paste("<b>Distance:</b>", prettyNum(max_distance$distance, big.mark=","), "(meters)"),
+                paste("<b>Date:</b>", as.Date(max_distance$date)),
+                paste("<b>Destination:</b>", max_distance$destination)
+            )
         
         output$map <- renderLeaflet({
             map <- leaflet(data = ships) %>%
@@ -112,7 +122,7 @@ server <- function(input, output, session) {
                 )
         })
     })
-
+    
     observe({
         if(input$tog) {
             leafletProxy("map", data = ships) %>%
@@ -124,4 +134,15 @@ server <- function(input, output, session) {
     })
 }
 
-shinyApp(ui = ui, server = server)
+
+shinyApp(
+    ui = list(
+        tagList(
+            tags$head(
+                tags$title("Vessel Maximum Distance Calculator")
+            ),
+            ui 
+        )
+    ), 
+    server = server
+)
